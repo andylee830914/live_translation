@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Caption Display</title>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <div id="translation" class="subtitle"></div>
+    </div>
+    <div class="footer">
+        <div id="caption" class="subtitle"></div>
+    </div>
+
+</body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+    integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+    crossorigin="anonymous"></script>
+<script>
+    // Create a WebSocket connection using Socket.IO
+    const socket = io();
+
+    // When a message is received from the server
+    socket.on('webcaption', function(caption) {
+        caption_element = document.getElementById('caption')
+        translation_element = document.getElementById('translation')
+        var target = "{{ language }}";
+        var translate_only = "{{ translate_only }}";
+
+        if ("translations" in caption){
+            var available_translations = Object.keys(caption.translations);
+        }else{
+            var available_translations = [];
+        }
+
+        if (available_translations.includes(target)){
+            if (translate_only == "True"){
+                caption_element.innerHTML = caption.translations[target];
+            }else{
+                caption_element.innerHTML = caption.text;
+                translation_element.innerHTML = caption.translations[target];
+            }
+        }else{
+            caption_element.innerHTML = caption.text;
+        }
+        
+        caption_element.scrollTop = caption_element.scrollHeight;
+        translation_element.scrollTop = translation_element.scrollHeight;
+    });
+</script>
