@@ -8,26 +8,26 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
 
 - Azure Speech Service subscription key and region
 - Python 3.12 or later
-- [uv]
+- uv
 
 ## Features
 
 - [x] Live captioning
 - [x] Live translation
-- [x] Auto detect speaker language
+- [x] Auto-detect the speaker's language with continuous language identification
 - [x] OBS integration
 - [ ] Customizable UI
 - [ ] TV/mobile mode
 
 ## Installation
 
-1. Clone [live_translation]
+1. Clone the repository
 
     For those who already know how to clone the repository, you can skip to the next step.
 
-2. [Install uv]
+2. Install `uv`
 
-    Use [uv] to setup the required version of Python.
+    Use `uv` to setup the required version of Python.
 
     1. For MacOS / Linux users
 
@@ -49,14 +49,14 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
 
 ## Configuration
 
-1. Set the Azure Speech Service subscription key and region in the .env file:
+1. Set the Azure Speech Service subscription key and region in the `.env` file:
 
     ```bash
-    AZURE_SUBSCRIPTION_KEY=<your-subscription-key>
-    AZURE_REGION=<your-region>
+    AZURE_SPEECH_KEY =<your-subscription-key>
+    AZURE_SPEECH_REGION =<your-region>
     ```
 
-2. Set the target language for translation in the `main.py` file:
+2. Set the list of candidate languages and target languages for translation in the `main.py` file:
     > Please note that the target language should be one of the supported languages by the Azure Speech Service. You can find the list of supported languages [here](https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support).
 
     Note: If you want to transcribe speech only, set the target language to `[]`.
