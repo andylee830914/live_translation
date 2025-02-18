@@ -106,5 +106,5 @@ You can also use the mobile mode by access `http://127.0.0.1:3000/mobile`. You c
 
 <details>
     <summary>Screenshot:</summary>
-    <img src="./static/mobile.jpg" />
+    <img src="./static/mobile.jpg" width="200px"/>
 </details>
