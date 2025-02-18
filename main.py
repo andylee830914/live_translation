@@ -34,17 +34,23 @@ def display():
     else:
         return render_template('index.html', language="None", translate_only="None")
 
+@app.route("/mobile")
+def display_mobile():
+    return render_template("mobile.html")
+
+
 @socketio.on('connect')
 def handle_message(data):
     print("connected")
     if len(config["target_languages"]) > 0:
-        emit("webcaption", {"language":"zh-TW","text":"字幕測試","translations":{"en":"subtitle test"}}, broadcast=True)
+        emit("available_languages", {"languages": ["Original"] + config["target_languages"]})
+        emit("webcaption", {"language":"zh-TW","text":"字幕測試","translations":{"en":"subtitle test", "ja":"日本語テスト"}})
     else:
-        emit("webcaption", {"language":"zh-TW","text":"字幕測試"}, broadcast=True)
+        emit("available_languages", {"languages": ["Original"]})
+        emit("webcaption", {"language":"zh-TW","text":"字幕測試"})
 
 @socketio.on('caption')
 def send_caption(data):
-    print(data)
     emit("webcaption", data, broadcast=True)
 
 

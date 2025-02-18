@@ -23,6 +23,9 @@
 
     // When a message is received from the server
     socket.on('webcaption', function(caption) {
+        if (caption.state == "recognized"){
+            return;
+        }
         caption_element = document.getElementById('caption')
         translation_element = document.getElementById('translation')
         var target = "{{ language }}";

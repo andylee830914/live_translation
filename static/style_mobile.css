@@ -1,0 +1,14 @@
+
+body::-webkit-scrollbar,
+div::-webkit-scrollbar {
+    display: none;
+}
+
+.subtitle {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.wrapper{
+    padding-top: 20px;
+}

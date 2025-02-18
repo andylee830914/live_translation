@@ -16,8 +16,9 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
 - [x] Live translation
 - [x] Auto-detect the speaker's language with continuous language identification
 - [x] OBS integration
+- [x] Mobile mode
+- [ ] TV mode
 - [ ] Customizable UI
-- [ ] TV/mobile mode
 
 ## Installation
 
@@ -82,6 +83,8 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
 
 ## Usage
 
+### OBS Integration
+
 Run the following command to start the application:
 
 ```bash
@@ -95,5 +98,13 @@ You can switch the target language by setting the query like `?target=zh-Hant` i
 Notice that the application will pick up the default microphone of your system.
 
 Screenshot:
+![OBS Integration Screenshot](./static/obs.png)
 
-![](./static/SCR-20250217-nkdp.png)
+### Mobile Mode
+
+You can also use the mobile mode by access `http://127.0.0.1:3000/mobile`. You can select the speaker's original language or the target language by clicking the dropdown on the top left corner.
+
+<details>
+    <summary>Screenshot:</summary>
+    <img src="./static/mobile.jpg" />
+</details>
