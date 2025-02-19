@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Caption Display</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="/static/style_mobile.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <header class="d-flex align-items-center pb-3">
+    </header>
+    <main>
+        <div class="container">
+            <div class="wrapper">
+                <div id="translation" class="subtitle">
+                    <div id="recognizing"></div>
+                </div>
+            </div>
+        
+        </div>
+    </main>
+    
+</body>
+</html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    // Create a WebSocket connection using Socket.IO
+    const socket = io();
+    const translation_element = document.getElementById('translation');
+    var show = "{{ language }}".split(',');
+
+    // When a message is received from the server
+    socket.on('webcaption', function(caption) {
+        recognizing_element = document.getElementById('recognizing')
+        if (caption.state == "recognized") {
+            recognized = document.createElement("div");
+            show.forEach(element => {
+                if (element == 'original') {
+                    recognized.innerHTML += caption.text;
+                    recognized.innerHTML += '<br>';
+                } else {
+                    recognized.innerHTML += caption.translations[element];
+                    recognized.innerHTML += '<br>';
+                }
+            });
+            
+            translation_element.insertBefore(recognized, recognizing_element);
+            recognizing_element.innerHTML = '';
+        }else{
+            recognizing_element.innerHTML = '';
+            show.forEach(element => {
+                if (element == 'original') {
+                    recognizing_element.innerHTML += caption.text;
+                    recognizing_element.innerHTML += '<br>';
+                } else {
+                    recognizing_element.innerHTML += caption.translations[element];
+                    recognizing_element.innerHTML += '<br>';
+                }
+            });
+        }
+        translation_element.scrollTop = translation_element.scrollHeight;
+    });
+</script>

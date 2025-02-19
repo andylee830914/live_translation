@@ -41,6 +41,11 @@ def display():
 def display_mobile():
     return render_template("mobile.html")
 
+@app.route("/tv")
+def display_tv():
+    language = request.args.get("language")
+    return render_template("tv.html", language=language)
+
 
 @socketio.on('connect')
 def handle_message(data):
