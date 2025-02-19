@@ -50,7 +50,6 @@
 
     // When a message is received from the server
     socket.on('webcaption', function(caption) {
-        console.log(caption);
         recognizing_element = document.getElementById('recognizing')
         if (caption.state == "recognized") {
             recognized = document.createElement("div");
@@ -75,6 +74,7 @@
         available_languages = languages.languages;
         const language_dropdown = document.getElementById('language_dropdown');
         const dropdown_menu = language_dropdown.querySelector('.dropdown-menu');
+        dropdown_menu.innerHTML = '';
         available_languages.forEach(language => {
             const dropdown_item = document.createElement('li');
             dropdown_item.innerHTML = `<a class="dropdown-item" href="#">${language}</a>`;

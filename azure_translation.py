@@ -237,15 +237,17 @@ class Captioning(object):
                         speechsdk.PropertyId.SpeechServiceConnection_AutoDetectSourceLanguageResult
                     ]
                     print("RECOGNIZING {}: {}".format(src_lang, evt.result.text))
-                    
                     if self.socketio is True:
                         self.sio.emit(
                             "caption",
                             {
+                                "state": "recognizing",
                                 "language": src_lang,
                                 "text": evt.result.text,
                             },
                         )
+
+                    
 
                 except Exception as ex:
                     print("Exception in recognizing_handler: {}".format(ex))
@@ -257,7 +259,7 @@ class Captioning(object):
 
         def result_callback(evt):
             """callback to display a translation result"""
-            if evt.result.reason == speechsdk.ResultReason.RecognizingSpeech:
+            if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
                 src_lang = evt.result.properties[
                     speechsdk.PropertyId.SpeechServiceConnection_AutoDetectSourceLanguageResult
                 ]
@@ -270,6 +272,15 @@ class Captioning(object):
                     )
                 )
                 self._offline_results.append(evt.result)
+                if self.socketio is True:
+                    self.sio.emit(
+                        "caption",
+                        {
+                            "state": "recognized",
+                            "language": src_lang,
+                            "text": evt.result.text,
+                        },
+                    )
 
         done = False
 
