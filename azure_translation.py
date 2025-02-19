@@ -107,7 +107,15 @@ class Captioning(object):
                     for key in evt.result.translations:
                         print("Translation to {}: {}".format(key, evt.result.translations[key]))
                     if self.socketio is True:
-                        self.sio.emit("caption", {"state": "recognizing", "language":src_lang, "text": evt.result.text,"translations":evt.result.translations})
+                        self.sio.emit(
+                            self._user_config["roomid"],
+                            {
+                                "state": "recognizing",
+                                "language": src_lang,
+                                "text": evt.result.text,
+                                "translations": evt.result.translations,
+                            },
+                        )
                     
                 except Exception as ex:
                     print("Exception in recognizing_handler: {}".format(ex))
@@ -137,7 +145,15 @@ class Captioning(object):
                     )
                 self._offline_results.append(evt.result)
                 if self.socketio is True:
-                    self.sio.emit("caption", {"state": "recognized", "language":src_lang, "text": evt.result.text,"translations":evt.result.translations})
+                    self.sio.emit(
+                        self._user_config["roomid"],
+                        {
+                            "state": "recognized",
+                            "language": src_lang,
+                            "text": evt.result.text,
+                            "translations": evt.result.translations,
+                        },
+                    )
         
             
 
@@ -239,7 +255,7 @@ class Captioning(object):
                     print("RECOGNIZING {}: {}".format(src_lang, evt.result.text))
                     if self.socketio is True:
                         self.sio.emit(
-                            "caption",
+                            self._user_config["roomid"],
                             {
                                 "state": "recognizing",
                                 "language": src_lang,
@@ -274,7 +290,7 @@ class Captioning(object):
                 self._offline_results.append(evt.result)
                 if self.socketio is True:
                     self.sio.emit(
-                        "caption",
+                        self._user_config["roomid"],
                         {
                             "state": "recognized",
                             "language": src_lang,

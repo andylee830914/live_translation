@@ -4,9 +4,11 @@ from flask_socketio import SocketIO, emit
 from azure_translation import Captioning
 import user_config_helper
 import threading
+import uuid
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+roomid = str(uuid.uuid4())
 
 config = {
     "subscription_key": os.environ.get("AZURE_SPEECH_KEY"),
@@ -16,6 +18,7 @@ config = {
     "captioning_mode": user_config_helper.CaptioningMode.REALTIME,
     "phrases": [],
     "socketio": "http://127.0.0.1:3000/",
+    "roomid": roomid,
 }
 
 @app.route('/')
@@ -49,7 +52,7 @@ def handle_message(data):
         emit("available_languages", {"languages": ["Original"]})
         emit("webcaption", {"language":"zh-TW","text":"字幕測試"})
 
-@socketio.on('caption')
+@socketio.on(roomid)
 def send_caption(data):
     emit("webcaption", data, broadcast=True)
 
