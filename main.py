@@ -23,20 +23,11 @@ config = {
 
 @app.route('/')
 def display():
-    language = request.args.get("target")
-    translate_only = request.args.get("translate_only")
-    if "translate_only" in request.args:
-        translate_only = True
-    else:
-        translate_only = False
-
-    if language in config["target_languages"]: 
-        return render_template(
-            "index.html", language=language, translate_only=translate_only
-        )
-    else:
-        return render_template('index.html', language="None", translate_only="None")
-
+    language = request.args.get("language")
+    if language is None:
+        language = 'original'
+    return render_template("index.html", language=language)
+    
 @app.route("/mobile")
 def display_mobile():
     return render_template("mobile.html")
@@ -44,6 +35,8 @@ def display_mobile():
 @app.route("/tv")
 def display_tv():
     language = request.args.get("language")
+    if language is None:
+        language = 'original'
     return render_template("tv.html", language=language)
 
 

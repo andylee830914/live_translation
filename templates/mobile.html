@@ -49,13 +49,13 @@
     socket.on('webcaption', function(caption) {
         recognizing_element = document.getElementById('recognizing')
         if (caption.state == "recognized") {
-            recognized = document.createElement("div");
+            recognized_element = document.createElement("div");
             if (current_language == 'Original') {
-                recognized.innerHTML = caption.text;
+                recognized_element.innerHTML = caption.text;
             } else {
-                recognized.innerHTML = caption.translations[current_language];
+                recognized_element.innerHTML = caption.translations[current_language];
             }
-            translation_element.insertBefore(recognized, recognizing_element);
+            translation_element.insertBefore(recognized_element, recognizing_element);
             recognizing_element.innerHTML = '';
         }else{
             if (current_language == 'Original') {

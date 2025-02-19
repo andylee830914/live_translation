@@ -92,7 +92,7 @@ uv run --env-file=.env python main.py
 
 Then open the browser and go to `http://127.0.0.1:3000/` to see the live caption and translation. You can also open browser in brodcast application like OBS to show the live caption and translation in your live stream.
 
-You can switch the target language by setting the query like `?target=zh-Hant` in the URL. If you want to show only the translation, add another parameter `&translate_only` to the query.
+You can select languages by setting the query as `?language=original,en` in the URL. First language will be shown at bottom and second language will be shown at top.
 
 Notice that the application will pick up the default microphone of your system.
 

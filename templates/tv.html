@@ -41,20 +41,20 @@
     socket.on('webcaption', function(caption) {
         recognizing_element = document.getElementById('recognizing')
         if (caption.state == "recognized") {
-            recognized = document.createElement("div");
+            recognized_element = document.createElement("div");
             // add class to div
-            recognized.classList.add('pb-4');
+            recognized_element.classList.add('pb-4');
             show.forEach(element => {
                 if (element == 'original') {
-                    recognized.innerHTML += caption.text;
-                    recognized.innerHTML += '<br>';
+                    recognized_element.innerHTML += caption.text;
+                    recognized_element.innerHTML += '<br>';
                 } else {
-                    recognized.innerHTML += caption.translations[element];
-                    recognized.innerHTML += '<br>';
+                    recognized_element.innerHTML += caption.translations[element] === undefined ? '' : caption.translations[element];
+                    recognized_element.innerHTML += '<br>';
                 }
             });
             
-            translation_element.insertBefore(recognized, recognizing_element);
+            translation_element.insertBefore(recognized_element, recognizing_element);
             recognizing_element.innerHTML = '';
         }else{
             recognizing_element.innerHTML = '';
@@ -63,7 +63,7 @@
                     recognizing_element.innerHTML += caption.text;
                     recognizing_element.innerHTML += '<br>';
                 } else {
-                    recognizing_element.innerHTML += caption.translations[element];
+                    recognizing_element.innerHTML += caption.translations[element] === undefined ? '' : caption.translations[element];
                     recognizing_element.innerHTML += '<br>';
                 }
             });
