@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
 <head>
     <title>Caption Display</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
         integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" type="text/css" href="/static/style_mobile.css">
+    <link rel="stylesheet" type="text/css" href="/static/style_tv.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -42,6 +42,8 @@
         recognizing_element = document.getElementById('recognizing')
         if (caption.state == "recognized") {
             recognized = document.createElement("div");
+            // add class to div
+            recognized.classList.add('pb-4');
             show.forEach(element => {
                 if (element == 'original') {
                     recognized.innerHTML += caption.text;

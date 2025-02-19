@@ -17,8 +17,7 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
 - [x] Auto-detect the speaker's language with continuous language identification
 - [x] OBS integration
 - [x] Mobile mode
-- [ ] TV mode
-- [ ] Customizable UI
+- [x] TV mode
 
 ## Installation
 
@@ -107,4 +106,15 @@ You can also use the mobile mode by access `http://127.0.0.1:3000/mobile`. You c
 <details>
     <summary>Screenshot:</summary>
     <img src="./static/mobile.jpg" width="200px"/>
+</details>
+
+### TV Mode
+
+You can also use the TV mode by access `http://127.0.0.1:3000/tv`. In this mode, the text will be displayed in a larger font size and the background will be black. All selected languages will be displayed in the same block.
+
+You can select languages by setting the query as `?language=original,en` in the URL.
+
+<details>
+    <summary>Screenshot:</summary>
+    <img src="./static/tv.png" width="400px"/>
 </details>
