@@ -103,10 +103,8 @@ Screenshot:
 
 You can also use the mobile mode by access `http://127.0.0.1:3000/mobile`. You can select the speaker's original language or the target language by clicking the dropdown on the top left corner.
 
-<details>
-    <summary>Screenshot:</summary>
-    <img src="./static/mobile.jpg" width="200px"/>
-</details>
+<summary>Screenshot:</summary>
+<img src="./static/mobile.jpg" width="200px"/>
 
 ### TV Mode
 
@@ -114,7 +112,5 @@ You can also use the TV mode by access `http://127.0.0.1:3000/tv`. In this mode,
 
 You can select languages by setting the query as `?language=original,en` in the URL.
 
-<details>
-    <summary>Screenshot:</summary>
-    <img src="./static/tv.png" width="400px"/>
-</details>
+Screenshot:
+![OBS Integration Screenshot](./static/tv.png)
