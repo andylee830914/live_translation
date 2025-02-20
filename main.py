@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, render_template_string
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from azure_translation import Captioning
 import user_config_helper
