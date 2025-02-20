@@ -131,7 +131,7 @@ graph LR
 
 ### Usage
 
-- Set the remote socket.io server endpoint and path in the `main.py` file amd configure the  room id that will receive the caption and translation from the translation service:
+- Set the remote socket.io server endpoint and path in the `main.py` file and configure the  room id that will receive the caption and translation from the translation service:
 
     ```python
     config = {
