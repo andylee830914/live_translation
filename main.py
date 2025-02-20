@@ -1,10 +1,11 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, render_template_string
 from flask_socketio import SocketIO, emit
 from azure_translation import Captioning
 import user_config_helper
 import threading
 import uuid
+import argparse
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -17,27 +18,21 @@ config = {
     "target_languages": ["zh-Hant", "en", "ja"],
     "captioning_mode": user_config_helper.CaptioningMode.REALTIME,
     "phrases": [],
-    "socketio": "http://127.0.0.1:3000/",
-    "roomid": roomid,
+    "socketio": {"endpoint": "http://127.0.0.1:3000", "path": "/socket.io"},
+    "roomid": roomid,    
 }
 
 @app.route('/')
 def display():
-    language = request.args.get("language")
-    if language is None:
-        language = 'original'
-    return render_template("index.html", language=language)
+    return render_template("index.html", socketio=config['socketio'])
     
 @app.route("/mobile")
 def display_mobile():
-    return render_template("mobile.html")
+    return render_template("mobile.html", socketio=config['socketio'])
 
 @app.route("/tv")
 def display_tv():
-    language = request.args.get("language")
-    if language is None:
-        language = 'original'
-    return render_template("tv.html", language=language)
+    return render_template("tv.html", socketio=config["socketio"])
 
 
 @socketio.on('connect')
@@ -63,6 +58,44 @@ def start_captioning():
         captioning.transcription_continuous_with_lid_from_microphone()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--disable-server",
+        action="store_true",
+        help="Disable local server and socket.io server. Use this option when user want to use remote socket server and host client on your own.",
+    )
+
+    parser.add_argument(
+        "--build",
+        action="store_true",
+        help="Build the frontend. Use this option when you want to self-host the frontend.",
+    )
+    args = parser.parse_args()
+
+    if args.build:
+        # make directory build if not exists
+        if not os.path.exists("build"):
+            os.mkdir("build")
+        # output render_template("index.html") to index.html
+        with app.app_context():
+            with open("build/index.html", "w") as f:
+                f.write(render_template("index.html", socketio=config["socketio"]))
+            # output render_template("mobile.html") to mobile.html
+            with open("build/mobile.html", "w") as f:
+                f.write(render_template("mobile.html", socketio=config["socketio"]))
+            # output render_template("tv.html") to tv.html
+            with open("build/tv.html", "w") as f:
+                f.write(render_template("tv.html", socketio=config["socketio"]))
+        # copy static css file to build
+        if not os.path.exists("build/static"):
+            os.mkdir("build/static")
+        os.system("cp -r static/*.css build/static")
+        exit()
+        
+    print("Starting captioning...")
+    print("Room ID: ", roomid)
     thread = threading.Thread(target=start_captioning)
     thread.start()
-    socketio.run(app, host="0.0.0.0", port=3000)
+
+    if not args.disable_server:
+        socketio.run(app, host="0.0.0.0", port=3000)

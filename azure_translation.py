@@ -40,7 +40,7 @@ class Captioning(object):
             self._user_config = config
             self.socketio = True
             self.sio = socketio.Client()
-            self.sio.connect(self._user_config["socketio"])
+            self.sio.connect(self._user_config["socketio"]["endpoint"], socketio_path=self._user_config["socketio"]["path"])
         self._offline_results = []
 
     def translation_continuous_with_lid_from_microphone(self):

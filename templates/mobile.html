@@ -40,7 +40,9 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     // Create a WebSocket connection using Socket.IO
-    const socket = io();
+    const socket = io("{{ socketio['endpoint'] }}", {
+        path: "{{ socketio['path'] }}"
+    });
     const translation_element = document.getElementById('translation');
     var available_languages = [];
     var current_language = 'Original';
@@ -50,6 +52,7 @@
         recognizing_element = document.getElementById('recognizing')
         if (caption.state == "recognized") {
             recognized_element = document.createElement("div");
+            recognized_element.classList.add('pb-2');
             if (current_language == 'Original') {
                 recognized_element.innerHTML = caption.text;
             } else {

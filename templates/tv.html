@@ -33,9 +33,13 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     // Create a WebSocket connection using Socket.IO
-    const socket = io();
+    const socket = io("{{ socketio['endpoint'] }}", {
+        path: "{{ socketio['path'] }}"
+    });
     const translation_element = document.getElementById('translation');
-    var show = "{{ language }}".split(',');
+    const url_params = new URLSearchParams(window.location.search);
+    const languages = url_params.get('language') || 'original';
+    var selected_languages = languages.split(',');
 
     // When a message is received from the server
     socket.on('webcaption', function(caption) {
@@ -44,12 +48,12 @@
             recognized_element = document.createElement("div");
             // add class to div
             recognized_element.classList.add('pb-4');
-            show.forEach(element => {
-                if (element == 'original') {
+            selected_languages.forEach(language => {
+                if (language == 'original') {
                     recognized_element.innerHTML += caption.text;
                     recognized_element.innerHTML += '<br>';
                 } else {
-                    recognized_element.innerHTML += caption.translations[element] === undefined ? '' : caption.translations[element];
+                    recognized_element.innerHTML += caption.translations[language] === undefined ? '' : caption.translations[language];
                     recognized_element.innerHTML += '<br>';
                 }
             });
@@ -58,12 +62,12 @@
             recognizing_element.innerHTML = '';
         }else{
             recognizing_element.innerHTML = '';
-            show.forEach(element => {
-                if (element == 'original') {
+            selected_languages.forEach(language => {
+                if (language == 'original') {
                     recognizing_element.innerHTML += caption.text;
                     recognizing_element.innerHTML += '<br>';
                 } else {
-                    recognizing_element.innerHTML += caption.translations[element] === undefined ? '' : caption.translations[element];
+                    recognizing_element.innerHTML += caption.translations[language] === undefined ? '' : caption.translations[language];
                     recognizing_element.innerHTML += '<br>';
                 }
             });

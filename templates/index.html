@@ -19,24 +19,28 @@
     crossorigin="anonymous"></script>
 <script>
     // Create a WebSocket connection using Socket.IO
-    const socket = io();
-    var show = "{{ language }}".split(',');
+    const socket = io("{{ socketio['endpoint'] }}", {
+        path : "{{ socketio['path'] }}"
+    });
+    const url_params = new URLSearchParams(window.location.search);
+    const languages = url_params.get('language') || 'original';
+    var selected_languages = languages.split(',');
     const caption_elements = document.getElementsByClassName("subtitle");
     // When a message is received from the server
     socket.on('webcaption', function(caption) {
         if (caption.state == "recognized"){
             return;
         }
-        if (show.length > 2){
-            show = show.slice(0, 2);
+        if (selected_languages.length > 2){
+            selected_languages = selected_languages.slice(0, 2);
         }
-        for (let i = 0; i < show.length; i++) {
+        for (let i = 0; i < selected_languages.length; i++) {
             caption_index = 1 - i; 
-            if (show[i] == 'original') {
+            if (selected_languages[i] == 'original') {
                 caption_elements[caption_index].innerHTML = caption.text;
             } else {
                 // add if statement to check if the translation exists
-                caption_elements[caption_index].innerHTML = caption.translations[show[i]] === undefined ? '' : caption.translations[show[i]];
+                caption_elements[caption_index].innerHTML = caption.translations[selected_languages[i]] === undefined ? '' : caption.translations[selected_languages[i]];
             }            
             caption_elements[caption_index].scrollTop = caption_elements[caption_index].scrollHeight;
         }

@@ -70,16 +70,6 @@ Parts of the code are modified from [Sample Repository for the Microsoft Cogniti
     }
     ```
 
-3. If you want to use as client-server architecture, set the socketio server IP and port in the `main.py` file:
-
-    ```python
-    config = {
-    ...
-        "socketio": "http://127.0.0.1:3000/",
-    ...
-    }
-    ```
-
 ## Usage
 
 ### OBS Integration
@@ -114,3 +104,52 @@ You can select languages by setting the query as `?language=original,en` in the 
 
 Screenshot:
 ![OBS Integration Screenshot](./static/tv.png)
+
+## Adavanced Usage
+
+You can run the application in client-server architecture. In this case, the server will be running on the local machine and the client will be hosted on the external server. The server will send the live caption and translation to the client using external Socket.IO.
+
+### Architecture
+
+```mermaid
+graph LR
+        B[Live Translation]
+        C[External Socket.IO/Web Server]
+        B --> |emit| C
+
+    subgraph Clients
+        D[TV]
+        E[Mobile]
+        F[OBS]
+
+    end
+
+    C --> |broadcast| D
+    C --> |broadcast| E
+    C --> |broadcast| F
+```
+
+### Usage
+
+- Set the remote socket.io server endpoint and path in the `main.py` file amd configure the  room id that will receive the caption and translation from the translation service:
+
+    ```python
+    config = {
+    ...
+        "socketio": {"endpoint": "http://127.0.0.1:3000", "path": "/socket.io"},
+        "roomid": "9d2b8c9b-6ae9-45e9-81be-8f3d4d549fdd",
+    ...
+    }
+    ```
+
+- Build the client with the server URL and host it on the external server. Files will be generated in the `build` folder:
+
+    ```bash
+    uv run --env-file=.env python main.py --build
+    ```
+
+- Start the translation service without the server:
+
+    ```bash
+    uv run --env-file=.env python main.py --disbale-server
+    ```
