@@ -116,7 +116,7 @@ if __name__ == "__main__":
                         "created_at": firestore.SERVER_TIMESTAMP,
                     }
                 )
-                print("Room updated. Room ID: ", newroom_ref.id)
+                print("Room updated.")
                 print("Please run the script again with --roomid ", roomid)
 
                 exit()
