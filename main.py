@@ -1,101 +1,147 @@
-import os
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
-from azure_translation import Captioning
-import user_config_helper
-import threading
-import uuid
 import argparse
+import datetime
+import os
+import threading
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+from flask import Flask
+from flask_socketio import SocketIO
+
+import user_config_helper
+from azure_translation import Captioning
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-roomid = str(uuid.uuid4())
 
 config = {
     "subscription_key": os.environ.get("AZURE_SPEECH_KEY"),
     "region": os.environ.get("AZURE_SPEECH_REGION"),
-    "detect_languages": ["en-US", "zh-TW", "ja-JP"],
-    "target_languages": ["zh-Hant", "en", "ja"],
     "captioning_mode": user_config_helper.CaptioningMode.REALTIME,
-    "phrases": [],
-    "socketio": {"endpoint": "http://127.0.0.1:3000", "path": "/socket.io"},
-    "roomid": roomid,    
+    "socketio": {
+        "endpoint": os.environ.get("SOCKET_ENDPOINT"),
+        "path": os.environ.get("SOCKET_PATH"),
+    },
+    "serverid": os.environ.get("SERVER_ID"),
 }
 
-@app.route('/')
-def display():
-    return render_template("index.html", socketio=config['socketio'])
-    
-@app.route("/mobile")
-def display_mobile():
-    return render_template("mobile.html", socketio=config['socketio'])
 
-@app.route("/tv")
-def display_tv():
-    return render_template("tv.html", socketio=config["socketio"])
-
-
-@socketio.on('connect')
-def handle_message(data):
-    print("connected")
-    if len(config["target_languages"]) > 0:
-        emit("available_languages", {"languages": ["Original"] + config["target_languages"]})
-        emit("webcaption", {"language":"zh-TW","text":"字幕測試","translations":{"en":"subtitle test", "ja":"日本語テスト"}})
-    else:
-        emit("available_languages", {"languages": ["Original"]})
-        emit("webcaption", {"language":"zh-TW","text":"字幕測試"})
-
-@socketio.on(roomid)
-def send_caption(data):
-    emit("webcaption", data, broadcast=True)
-
-
-def start_captioning():
-    captioning = Captioning(config)
+def start_captioning(roomid):
+    captioning = Captioning(config, roomid)
     if len(config["target_languages"]) > 0:
         captioning.translation_continuous_with_lid_from_microphone()
     else:
         captioning.transcription_continuous_with_lid_from_microphone()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--roomid", type=str, help="Room ID")
     parser.add_argument(
-        "--disable-server",
-        action="store_true",
-        help="Disable local server and socket.io server. Use this option when user want to use remote socket server and host client on your own.",
+        "--firebase-cred", type=str, help="Path to Firebase service account key"
+    )
+    parser.add_argument("--create-room", action="store_true", help="Create a room")
+    parser.add_argument(
+        "--edit-room", action="store_true", help="Edit room information"
     )
 
-    parser.add_argument(
-        "--build",
-        action="store_true",
-        help="Build the frontend. Use this option when you want to self-host the frontend.",
-    )
     args = parser.parse_args()
+    if args.roomid is None and not args.create_room:
+        raise Exception(
+            "Room ID is required. Create a room by --create-room or edit an existing room by --edit-room."
+        )
+    if args.firebase_cred is None:
+        raise Exception("Firebase service account key is required.")
 
-    if args.build:
-        # make directory build if not exists
-        if not os.path.exists("build"):
-            os.mkdir("build")
-        # output render_template("index.html") to index.html
-        with app.app_context():
-            with open("build/index.html", "w") as f:
-                f.write(render_template("index.html", socketio=config["socketio"]))
-            # output render_template("mobile.html") to mobile.html
-            with open("build/mobile.html", "w") as f:
-                f.write(render_template("mobile.html", socketio=config["socketio"]))
-            # output render_template("tv.html") to tv.html
-            with open("build/tv.html", "w") as f:
-                f.write(render_template("tv.html", socketio=config["socketio"]))
-        # copy static css file to build
-        if not os.path.exists("build/static"):
-            os.mkdir("build/static")
-        os.system("cp -r static/*.css build/static")
-        exit()
-        
-    print("Starting captioning...")
-    print("Room ID: ", roomid)
-    thread = threading.Thread(target=start_captioning)
+    # Initialize Firebase
+    cred = credentials.Certificate(args.firebase_cred)
+    app = firebase_admin.initialize_app(cred)
+    db = firestore.client()
+
+    if args.create_room:
+        newroom_ref = db.collection("rooms").document()
+        # Create a new room with user input
+        try:
+            newroom_ref.set(
+                {
+                    "event": input("Event: "),
+                    "date": datetime.datetime.strptime(
+                        input("Date (YYYY-MM-DD): "), "%Y-%m-%d"
+                    ),
+                    "hall": input("Room Name: "),
+                    "detect_lang": input("Detect Languages: ").split(","),
+                    "target_lang": input("Target Languages: ").split(","),
+                    "phrases": input("Phrases: ").split(","),
+                    "created_by": cred._g_credential._service_account_email,
+                    "created_at": firestore.SERVER_TIMESTAMP,
+                }
+            )
+            print("Room created. Room ID: ", newroom_ref.id)
+            print("Please run the script again with --roomid ", newroom_ref.id)
+            exit()
+        except Exception as e:
+            print(e)
+            newroom_ref.delete()
+            exit()
+
+    roomid = args.roomid
+    roomdata_ref = db.collection("rooms").document(roomid)
+    room_data = roomdata_ref.get()
+    if args.edit_room:
+        if room_data.exists:
+            # Edit room information
+            try:
+                roomdata_ref.update(
+                    {
+                        "event": input(f"Event [{room_data.to_dict().get('event')}]: "),
+                        "date": datetime.datetime.strptime(
+                            input(
+                                f"Date (YYYY-MM-DD) [{room_data.to_dict().get('date').strftime('%Y-%m-%d')}]: "
+                            ),
+                            "%Y-%m-%d",
+                        ),
+                        "hall": input(
+                            f"Room Name [{room_data.to_dict().get('hall')}]: "
+                        ),
+                        "detect_lang": input(
+                            f"Detect Languages [{','.join(room_data.to_dict().get('detect_lang', []))}]: "
+                        ).split(","),
+                        "target_lang": input(
+                            f"Target Languages [{','.join(room_data.to_dict().get('target_lang', []))}]: "
+                        ).split(","),
+                        "phrases": input(
+                            f"Phrases [{', '.join(room_data.to_dict().get('phrases', []))}]: "
+                        ).split(","),
+                        "created_by": cred._g_credential._service_account_email,
+                        "created_at": firestore.SERVER_TIMESTAMP,
+                    }
+                )
+                print("Room updated. Room ID: ", newroom_ref.id)
+                print("Please run the script again with --roomid ", roomid)
+
+                exit()
+            except Exception as e:
+                print(e)
+                exit()
+        else:
+            raise Exception("Room data not exist. Create a room by --create-room.")
+
+    else:
+        if room_data.exists:
+            config["detect_languages"] = room_data.to_dict().get("detect_lang", [])
+            config["target_languages"] = room_data.to_dict().get("target_lang", [])
+            config["phrases"] = room_data.to_dict().get("phrases", [])
+            # print room info
+            print("Server ID: ", config["serverid"])
+            print("Room Info:")
+            print("  - Room ID: ", roomid)
+            print("  - Event: ", room_data.to_dict().get("event"))
+            print("  - Room Name: ", room_data.to_dict().get("hall"))
+            print("  - Detect Languages: ", config["detect_languages"])
+            print("  - Target Languages: ", config["target_languages"])
+            print("  - Phrases: ", config["phrases"])
+        else:
+            raise Exception("Room data not exist. Create a room by --create-room.")
+
+    thread = threading.Thread(target=start_captioning, args=(roomid,))
     thread.start()
-
-    if not args.disable_server:
-        socketio.run(app, host="0.0.0.0", port=3000)

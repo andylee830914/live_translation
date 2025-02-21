@@ -32,7 +32,7 @@ USAGE = """Usage: python captioning.py [...]
 """
 
 class Captioning(object):
-    def __init__(self, config=None):
+    def __init__(self, config=None, roomid=None):
         if config is None:
             self._user_config = user_config_helper.user_config_from_args(USAGE)
             self.socketio = False
@@ -40,7 +40,11 @@ class Captioning(object):
             self._user_config = config
             self.socketio = True
             self.sio = socketio.Client()
-            self.sio.connect(self._user_config["socketio"]["endpoint"], socketio_path=self._user_config["socketio"]["path"])
+            self.sio.connect(
+                self._user_config["socketio"]["endpoint"] + "?roomid=" + roomid,
+                socketio_path=self._user_config["socketio"]["path"],
+                transports=["websocket"],
+            )
         self._offline_results = []
 
     def translation_continuous_with_lid_from_microphone(self):
@@ -73,7 +77,6 @@ class Captioning(object):
         )
 
         # Specify the AutoDetectSourceLanguageConfig, which defines the number of possible languages
-        print("DETECT LANGUAGES: {}".format(self._user_config["detect_languages"]))
         auto_detect_source_language_config = (
             speechsdk.languageconfig.AutoDetectSourceLanguageConfig(
                 languages=self._user_config["detect_languages"]
@@ -108,7 +111,7 @@ class Captioning(object):
                         print("Translation to {}: {}".format(key, evt.result.translations[key]))
                     if self.socketio is True:
                         self.sio.emit(
-                            self._user_config["roomid"],
+                            self._user_config["serverid"],
                             {
                                 "state": "recognizing",
                                 "language": src_lang,
@@ -146,7 +149,7 @@ class Captioning(object):
                 self._offline_results.append(evt.result)
                 if self.socketio is True:
                     self.sio.emit(
-                        self._user_config["roomid"],
+                        self._user_config["serverid"],
                         {
                             "state": "recognized",
                             "language": src_lang,
@@ -167,10 +170,10 @@ class Captioning(object):
 
         # connect callback functions to the events fired by the recognizer
         recognizer.session_started.connect(
-            lambda evt: print("SESSION STARTED: {}".format(evt))
+            lambda evt: print("TRANSLATE STARTED: {}".format(evt))
         )
         recognizer.session_stopped.connect(
-            lambda evt: print("SESSION STOPPED {}".format(evt))
+            lambda evt: print("TRANSLATE STOPPED {}".format(evt))
         )
 
         if (user_config_helper.CaptioningMode.REALTIME == self._user_config["captioning_mode"]):
@@ -255,7 +258,7 @@ class Captioning(object):
                     print("RECOGNIZING {}: {}".format(src_lang, evt.result.text))
                     if self.socketio is True:
                         self.sio.emit(
-                            self._user_config["roomid"],
+                            self._user_config["serverid"],
                             {
                                 "state": "recognizing",
                                 "language": src_lang,
@@ -290,7 +293,7 @@ class Captioning(object):
                 self._offline_results.append(evt.result)
                 if self.socketio is True:
                     self.sio.emit(
-                        self._user_config["roomid"],
+                        self._user_config["serverid"],
                         {
                             "state": "recognized",
                             "language": src_lang,
@@ -308,10 +311,10 @@ class Captioning(object):
 
         # connect callback functions to the events fired by the recognizer
         recognizer.session_started.connect(
-            lambda evt: print("SESSION STARTED: {}".format(evt))
+            lambda evt: print("CAPTION STARTED: {}".format(evt))
         )
         recognizer.session_stopped.connect(
-            lambda evt: print("SESSION STOPPED {}".format(evt))
+            lambda evt: print("CAPTION STOPPED {}".format(evt))
         )
 
         if (

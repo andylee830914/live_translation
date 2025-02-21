@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark">
+
+<head>
+    <title>Caption Display</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <!-- <header class="d-flex align-items-center pb-3">
+    </header> -->
+    <main>
+        <nav class="navbar bg-dark border-body">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <img src="/static/icon.svg" height="20" class="d-inline-block align-center" alt="">
+                    PyCon TW
+                </a>
+                <span class="badge rounded-pill badge-outline-secondary" id="hall">Loading</span>
+            </div>
+
+        </nav>
+        <div class="container">
+            <div class="dropdown pt-2" id="language_dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    Original
+                </button>
+                <ul class="dropdown-menu">
+                </ul>
+            </div>
+            <div class="wrapper">
+                <div id="translation" class="subtitle masked-overflow">
+                    <div class="pt-4"></div>
+                    <div id="recognizing"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <script type="importmap">
+    		{
+    			"imports": {
+    				"@popperjs/core": "https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.4/dist/esm/index.js",
+    				"@twbs/bootstrap": "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.esm.min.js"
+    			}
+    		}
+    		</script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+        import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
+        import * as bootstrap from '@twbs/bootstrap';
+
+        const url_params = new URLSearchParams(window.location.search);
+        const roomid = url_params.get('room') || '';
+
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "{{firebase_config.apiKey}}",
+            authDomain: "{{firebase_config.authDomain}}",
+            projectId: "{{firebase_config.projectId}}",
+            storageBucket: "{{firebase_config.storageBucket}}",
+            messagingSenderId: "{{firebase_config.messagingSenderId}}",
+            appId: "{{firebase_config.appId}}",
+            measurementId: "{{firebase_config.measurementId}}"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const docRef = doc(db, "rooms", roomid);
+        const available_languages = ['Original']; // Use the local variable
+        let current_language = 'Original'; // Declare current_language with default value
+        getDoc(docRef).then((doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                available_languages.push(...data.target_lang); // Update available_languages directly
+                const language_dropdown = document.getElementById('language_dropdown');
+                const hall = document.getElementById('hall');
+                hall.innerHTML = data.hall; // Assuming `data` includes a hall property
+                const dropdown_menu = language_dropdown.querySelector('.dropdown-menu');
+                dropdown_menu.innerHTML = '';
+                available_languages.forEach(language => { // Update to use the new local variable
+                    const dropdown_item = document.createElement('li');
+                    dropdown_item.innerHTML = `<a class="dropdown-item" href="#">${language}</a>`;
+                    dropdown_menu.appendChild(dropdown_item);
+                });
+                // Add event listener to dropdown items
+                const translation_element = document.getElementById('translation');
+                dropdown_menu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function () {
+                        const target = item.innerHTML;
+                        // change language button text
+                        language_dropdown.querySelector('button').innerHTML = target;
+                        current_language = target; // Update to use window.current_language
+                        // clear translation element
+                        translation_element.innerHTML = '<div class="pt-4"></div>';
+                        // add recognizing element
+                        const recognizing_element = document.createElement('div'); // Change let to const for better scope management
+                        recognizing_element.id = 'recognizing';
+                        translation_element.appendChild(recognizing_element);
+                        logEvent(analytics, 'change_language', {
+                            content_type: 'language',
+                            content_id: current_language
+                        });
+
+                    });
+                });
+            } else {
+                // doc.data() will be undefined in this case
+                console.log("No such document!");
+            }
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+        });
+
+        const socket = io("{{ socket_endpoint }}", {
+            path: "{{ socket_path }}",
+            query: {
+                roomid: roomid
+            }
+        });
+        socket.on("connect", () => {
+            logEvent(analytics, 'join_room', {
+                roomid: roomid,
+                socketid: socket.id
+            });
+        });
+
+
+        const translation_element = document.getElementById('translation');
+
+        // When a message is received from the server
+        socket.on('webcaption', function (caption) {
+            const recognizing_element = document.getElementById('recognizing'); // Add const for declaring variable
+            if (caption.state == "recognized") {
+                const recognized_element = document.createElement("div"); // Add const for declared variable
+                recognized_element.classList.add('pb-2');
+                if (current_language == 'Original') {
+                    recognized_element.innerHTML = caption.text;
+                } else {
+                    recognized_element.innerHTML = caption.translations[current_language];
+                }
+                translation_element.insertBefore(recognized_element, recognizing_element);
+                recognizing_element.innerHTML = '';
+            } else {
+                if (current_language == 'Original') {
+                    recognizing_element.innerHTML = caption.text;
+                } else {
+                    recognizing_element.innerHTML = caption.translations[current_language];
+                }
+            }
+            translation_element.scrollTop = translation_element.scrollHeight;
+        });
+    </script>
+</body>
+
+</html>
