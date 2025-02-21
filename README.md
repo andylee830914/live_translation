@@ -4,6 +4,13 @@ This project is a simple implementation of live captioning and translation using
 
 Parts of the code are modified from [Sample Repository for the Microsoft Cognitive Services Speech SDK](https://github.com/Azure-Samples/cognitive-services-speech-sdk).
 
+Demo Video:
+
+https://github.com/user-attachments/assets/814a1731-2048-4bab-b0ea-68d10f935b2c
+
+
+
+
 ## Prerequisites
 
 - Azure Speech Service subscription key and region
